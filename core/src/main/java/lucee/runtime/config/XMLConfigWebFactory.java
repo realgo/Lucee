@@ -3141,20 +3141,40 @@ public final class XMLConfigWebFactory extends XMLConfigFactory {
 			}
 
 			// Tag Directory
-			List<Resource> listTags = new ArrayList<Resource>();
+			List<Path> listTags = new ArrayList<Path>();
 			if (!StringUtil.isEmpty(strDefaultTagDirectory)) {
 				Resource dir = ConfigWebUtil.getFile(config, configDir, strDefaultTagDirectory, FileUtil.TYPE_DIR);
 				createTagFiles(config, configDir, dir, doNew);
-				if (dir != null) listTags.add(dir);
+				listTags.add(new Path(strDefaultTagDirectory, dir));
 			}
-			if (!StringUtil.isEmpty(strTagDirectory)) {
+			// addional tags
+			Map<String, String> mapTags = new LinkedHashMap<String, String>();
+			if (hasCS) {
+				Collection<Mapping> mappings = configServer.getTagMappings();
+				if (mappings != null && !mappings.isEmpty()) {
+					Iterator<Mapping> it = mappings.iterator();
+					Mapping m;
+					while (it.hasNext()) {
+						m = it.next();
+						if ((m.getPhysical() == null || !m.getPhysical().exists()) && ConfigWebUtil.hasPlaceholder(m.getStrPhysical())) {
+							mapTags.put(m.getStrPhysical(), "");
+						}
+					}
+				}
+			}
+
+			if (!StringUtil.isEmpty(strTagDirectory) || !mapTags.isEmpty()) {
 				String[] arr = ListUtil.listToStringArray(strTagDirectory, ',');
 				for (String str: arr) {
+					mapTags.put(str, "");
+				}
+				for (String str: mapTags.keySet()) {
+
 					try {
 						str = str.trim();
 						if (StringUtil.isEmpty(str)) continue;
 						Resource dir = ConfigWebUtil.getFile(config, configDir, str, FileUtil.TYPE_DIR);
-						if (dir != null) listTags.add(dir);
+						listTags.add(new Path(str, dir));
 					}
 					catch (Throwable t) {
 						ExceptionUtil.rethrowIfNecessary(t);
@@ -3193,21 +3213,39 @@ public final class XMLConfigWebFactory extends XMLConfigFactory {
 			}
 
 			// Function files (CFML)
-			List<Resource> listFuncs = new ArrayList<Resource>();
+			List<Path> listFuncs = new ArrayList<Path>();
 			if (!StringUtil.isEmpty(strDefaultFuncDirectory)) {
 				Resource dir = ConfigWebUtil.getFile(config, configDir, strDefaultFuncDirectory, FileUtil.TYPE_DIR);
 				createFunctionFiles(config, configDir, dir, doNew);
-				if (dir != null) listFuncs.add(dir);
+				listFuncs.add(new Path(strDefaultFuncDirectory, dir));
 				// if (dir != null) config.setFunctionDirectory(dir);
 			}
-			if (!StringUtil.isEmpty(strFuncDirectory)) {
+			// function additonal
+			Map<String, String> mapFunctions = new LinkedHashMap<String, String>();
+			if (hasCS) {
+				Collection<Mapping> mappings = configServer.getFunctionMappings();
+				if (mappings != null && !mappings.isEmpty()) {
+					Iterator<Mapping> it = mappings.iterator();
+					Mapping m;
+					while (it.hasNext()) {
+						m = it.next();
+						if ((m.getPhysical() == null || !m.getPhysical().exists()) && ConfigWebUtil.hasPlaceholder(m.getStrPhysical())) {
+							mapFunctions.put(m.getStrPhysical(), "");
+						}
+					}
+				}
+			}
+			if (!StringUtil.isEmpty(strFuncDirectory) || !mapFunctions.isEmpty()) {
 				String[] arr = ListUtil.listToStringArray(strFuncDirectory, ',');
 				for (String str: arr) {
+					mapFunctions.put(str, "");
+				}
+				for (String str: mapFunctions.keySet()) {
 					try {
 						str = str.trim();
 						if (StringUtil.isEmpty(str)) continue;
 						Resource dir = ConfigWebUtil.getFile(config, configDir, str, FileUtil.TYPE_DIR);
-						if (dir != null) listFuncs.add(dir);
+						listFuncs.add(new Path(str, dir));
 					}
 					catch (Throwable t) {
 						ExceptionUtil.rethrowIfNecessary(t);
@@ -5557,6 +5595,20 @@ public final class XMLConfigWebFactory extends XMLConfigFactory {
 			d = -1; // I don't think we need this?
 		}
 		return v;
+	}
+
+	public static class Path {
+		public final String str;
+		public final Resource res;
+
+		public Path(String str, Resource res) {
+			this.str = str;
+			this.res = res;
+		}
+
+		public boolean isValidDirectory() {
+			return res != null && res.isDirectory();
+		}
 	}
 
 	public static class MonitorTemp {
