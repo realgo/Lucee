@@ -30,12 +30,20 @@ component extends = "org.lucee.cfml.test.LuceeTestCase" labels="orm" {
 				expect(trim(result.filecontent)).toBe('success2');
 			});
 
-			it(title = "Test roundtrip of orm entity with bigdecimal field", body = function( currentSpec ) {
+			it(title = "Test roundtrip of orm entity with double field", body = function( currentSpec ) {
 				local.result = _InternalRequest(
 					template : "#uri#/LDEV5086.cfm",
 					forms :	{ scene = 3 }
 				);
 				expect(trim(result.filecontent)).toBe('success3');
+			});
+
+			it(title = "Test roundtrip of orm entity with bigdecimal field", body = function( currentSpec ) {
+				local.result = _InternalRequest(
+					template : "#uri#/LDEV5086.cfm",
+					forms :	{ scene = 4 }
+				);
+				expect(trim(result.filecontent)).toBe('success4');
 			});
 		});
 	}

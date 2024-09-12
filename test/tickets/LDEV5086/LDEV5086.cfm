@@ -4,18 +4,23 @@ try {
     // it will be called 3 times by test/tickets/LDEV5086.cfc
 	param name="form.scene" default="0";
 
-    bigDecimalNumber = 12345.123456;
+    startingBalance = 12345.123456;
 
 	if(form.scene eq 1) {
-        person = entityNew( "Person", { firstName : "Susi", lastName: "Doe", balance : bigDecimalNumber } ) ;
+        person = entityNew( "Person", 
+            { firstName : "Susi",
+             lastName: "Doe",
+            doubleBalance : startingBalance,
+            bigDecimalBalance: startingBalance}
+             ) ;
         EntitySave(person);
-        ormFlush();
+        // ormFlush();
         writeOutput( "success1" );
 	}
 
 	else if(form.scene eq 2) {
 		minBalance = 10000.023423430;
-        queryStr = "FROM Person WHERE balance > :minBalance";
+        queryStr = "FROM Person WHERE doubleBalance > :minBalance";
         results = ORMExecuteQuery(queryStr, {minBalance: minBalance});
 
         if(arrayIsEmpty(results))
@@ -35,24 +40,53 @@ try {
 
     else if(form.scene eq 3) {
 		minBalance = 10000.023423430;
-        queryStr = "FROM Person WHERE balance > :minBalance";
+        queryStr = "FROM Person WHERE doubleBalance > :minBalance";
         results = ORMExecuteQuery(queryStr, {minBalance: minBalance});
 
         if(arrayLen(results) eq 1)
         {
             // check that roundtrip has not changed the balance
             for (person in results) {
-                balance = person.getBalance()
-                if(balance eq bigDecimalNumber )
+                balance = person.getDoubleBalance()
+                if(balance eq startingBalance )
                 {
                     writeOutput( "success3" );
                 }
                 else
                 {
-                    inType = getMetadata(bigDecimalNumber).getName();
+                    inType = getMetadata(startingBalance).getName();
                     outType = getMetadata(balance).getName()
 
-                    writeOutput( "failure, balance was #balance#(#outType#), but should be #bigDecimalNumber#(#inType#)");
+                    writeOutput( "failure, doubleBalance was #balance#(#outType#), but should be #startingBalance#(#inType#)");
+                }
+            }
+        }
+        else
+        {
+            writeOutput( "failure, could not find right number of records" );
+        }
+	}
+
+    else if(form.scene eq 4) {
+		minBalance = 10000.023423430;
+        queryStr = "FROM Person WHERE doubleBalance > :minBalance";
+        results = ORMExecuteQuery(queryStr, {minBalance: minBalance});
+
+        if(arrayLen(results) eq 1)
+        {
+            // check that roundtrip has not changed the balance
+            for (person in results) {
+                balance = person.getBigDecimalBalance()
+                if(balance eq startingBalance )
+                {
+                    writeOutput( "success4" );
+                }
+                else
+                {
+                    inType = getMetadata(startingBalance).getName();
+                    outType = getMetadata(balance).getName()
+
+                    writeOutput( "failure, bigDecimalBalance was #balance#(#outType#), but should be #startingBalance#(#inType#)");
                 }
             }
         }
