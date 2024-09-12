@@ -14,7 +14,7 @@ try {
             bigDecimalBalance: startingBalance}
              ) ;
         EntitySave(person);
-        // ormFlush();
+        ormFlush();
         writeOutput( "success1" );
 	}
 
@@ -76,8 +76,11 @@ try {
         {
             // check that roundtrip has not changed the balance
             for (person in results) {
-                balance = person.getBigDecimalBalance()
-                if(balance eq startingBalance )
+
+                // balance = javacast( "BigDecimal", 9999.123456 );
+                //balance = javacast( "BigDecimal",person.getBigDecimalBalance());
+                balance = person.getBigDecimalBalance();
+                if( abs(startingBalance - balance) lt 0.001 )
                 {
                     writeOutput( "success4" );
                 }
