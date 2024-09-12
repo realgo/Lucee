@@ -49,7 +49,10 @@ try {
                 }
                 else
                 {
-                    writeOutput( "failure, balance was #balance#, but should be #bigDecimalNumber#" );
+                    inType = getMetadata(bigDecimalNumber).getName();
+                    outType = getMetadata(balance).getName()
+
+                    writeOutput( "failure, balance was #balance#(#outType#), but should be #bigDecimalNumber#(#inType#)");
                 }
             }
         }
